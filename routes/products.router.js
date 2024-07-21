@@ -1,5 +1,5 @@
-const express = require("express")
-const fs = require("fs")
+import express from 'express';
+import fs from 'fs';
 const router = express.Router()
 const filePath = "./src/products.json"
 
@@ -22,6 +22,14 @@ router.get("/", (req, res) => {
     const products = readProducts()
     res.json(products)
 })
+
+router.get("/:id", (req, res) => {
+    const { id } = req.params;
+    const products = readProducts();
+    const product = products.find(p => p.id === parseInt(id));
+    if (!product) return res.status(404).json({ message: "Producto no encontrado" });
+    res.json(product);
+});
 
 // post
 router.post("/", (req, res) => {
@@ -58,9 +66,10 @@ router.put("/:id", (req, res) => {
 router.delete("/:id", (req, res) => {
     const { id } = req.params
     const products = readProducts()
-    const newProduct = products.filter(p => p.id !== parseInt(id))
-    writeProducts(newProduct)
+    const newProducts = products.filter(p => p.id !== parseInt(id))
+    if (newProducts.length === products.length) return res.status(404).json({ message: "Producto no encontrado" });
+    writeProducts(newProducts)
     res.json({message: "Producto eliminado"})
 })
 
-module.exports = router
+export default router;

@@ -1,5 +1,5 @@
-const express = require("express")
-const fs = require("fs")
+import express from 'express';
+import fs from 'fs';
 const router = express.Router()
 const filePath = "./src/carts.json"
 
@@ -38,6 +38,8 @@ router.post("/", (req, res) => {
     const cart = carts.find(c => c.cid === parseInt(cid))
     if (!cart) return res.status(404).json({ message: "Carrito no encontrado" })
 
+        
+
         // Validación
 if (!productId) {
     return res.status(400).json({ message: "productId es requerido" })
@@ -63,4 +65,5 @@ router.get("/:cid", (req, res) => {
         res.json(cart)
 })
 
-module.exports = router
+
+export default router;
