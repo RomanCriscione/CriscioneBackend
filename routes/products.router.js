@@ -5,7 +5,7 @@ const filePath = "./src/products.json"
 
 // leer
 
-const readProducts = () => {
+export const readProducts = () => {
     if (!fs.existsSync(filePath)) return[]
     const data = fs.readFileSync(filePath, "utf8")
     return JSON.parse(data)
@@ -13,7 +13,7 @@ const readProducts = () => {
 
 // Guardar
 
-const writeProducts = (products) => {
+export const writeProducts = (products) => {
     fs.writeFileSync(filePath, JSON.stringify(products, null, 2))
 }
 
@@ -24,12 +24,12 @@ router.get("/", (req, res) => {
 })
 
 router.get("/:id", (req, res) => {
-    const { id } = req.params;
-    const products = readProducts();
-    const product = products.find(p => p.id === parseInt(id));
-    if (!product) return res.status(404).json({ message: "Producto no encontrado" });
-    res.json(product);
-});
+    const { id } = req.params
+    const products = readProducts()
+    const product = products.find(p => p.id === parseInt(id))
+    if (!product) return res.status(404).json({ message: "Producto no encontrado" })
+    res.json(product)
+})
 
 // post
 router.post("/", (req, res) => {
@@ -46,6 +46,9 @@ if (!newProduct.title || !newProduct.description || !newProduct.code || !newProd
        
     products.push(newProduct)
     writeProducts(products)
+
+    req.app.get('io').emit('updateProducts', products)
+
     res.json({message: "Producto agregado", products: newProduct})
 })
 
@@ -59,6 +62,9 @@ router.put("/:id", (req, res) => {
         const updateProduct = {...products[productsID], ...req.body, id: products[productsID].id}
     products[productsID] = updateProduct
     writeProducts(products)
+
+    req.app.get('io').emit('updateProducts', products)
+
     res.json({message: "Producto actualizado", products: updateProduct})
 })
 
@@ -69,6 +75,9 @@ router.delete("/:id", (req, res) => {
     const newProducts = products.filter(p => p.id !== parseInt(id))
     if (newProducts.length === products.length) return res.status(404).json({ message: "Producto no encontrado" });
     writeProducts(newProducts)
+
+    req.app.get('io').emit('updateProducts', newProducts)
+
     res.json({message: "Producto eliminado"})
 })
 

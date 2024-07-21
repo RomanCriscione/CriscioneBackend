@@ -37,5 +37,10 @@
     "thumbnails": [
       "https://www.purplant.es/wp-content/uploads/2024/04/rosal-rosa-1024x1024.jpg"
     ]
+  },
+  {
+    "id": 4,
+    "title": "Pino",
+    "price": "5000"
   }
 ]
