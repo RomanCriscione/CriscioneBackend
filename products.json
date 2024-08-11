@@ -1,46 +1,4 @@
 [
-  {
-    "id": 1,
-    "title": "Calathea",
-    "description": "Planta de interior",
-    "code": "CalatheaS",
-    "price": 5000,
-    "status": true,
-    "stock": 10,
-    "category": "Planta de interior",
-    "thumbnails": [
-      "https://media.admagazine.com/photos/660a733195c996caa69c1c27/16:9/w_1920,c_limit/calathea-roseopicta-significado.jpg"
-    ]
-  },
-  {
-    "id": 2,
-    "title": "Peperomia",
-    "description": "Planta de interior",
-    "code": "Peperomia1",
-    "price": 5000,
-    "status": true,
-    "stock": 10,
-    "category": "Planta de interior",
-    "thumbnails": [
-      "https://leafy-life.com/wp-content/uploads/2020/11/how-to-care-for-peperomia-napoli-nights-1.jpg"
-    ]
-  },
-  {
-    "id": 3,
-    "title": "Rosal",
-    "description": "Planta de exterior",
-    "code": "Rosa1",
-    "price": 20000,
-    "status": true,
-    "stock": 5,
-    "category": "Planta de exterior",
-    "thumbnails": [
-      "https://www.purplant.es/wp-content/uploads/2024/04/rosal-rosa-1024x1024.jpg"
-    ]
-  },
-  {
-    "id": 4,
-    "title": "Pino",
-    "price": "5000"
-  }
+  
+  
 ]

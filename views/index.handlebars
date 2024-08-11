@@ -1,11 +1,68 @@
 <div>
     <h1>Lista de productos</h1>
+
+    <form action="/products" method="get">
+        <div>
+            <label for="category">Categoría:</label>
+            <input type="text" id="category" name="category" placeholder="Ingrese categoría" value="{{category}}">
+        </div>
+        
+        <div>
+            <label for="availability">Disponibilidad:</label>
+            <select id="availability" name="availability">
+                <option value="">Todos</option>
+                <option value="available" {{#if (eq availability "available")}}selected{{/if}}>Disponibles</option>
+                <option value="unavailable" {{#if (eq availability "unavailable")}}selected{{/if}}>No disponibles</option>
+            </select>
+        </div>
+        
+        <div>
+            <button type="submit">Filtrar</button>
+        </div>
+    </form>
+
     <ul id="products-list">
         {{#each products}}
-        <li>{{this.title}} - ${{this.price}}</li>
+        <li>
+            <h2>{{this.title}}</h2>
+            <p><strong>Descripción:</strong> {{this.description}}</p>
+            <p><strong>Código:</strong> {{this.code}}</p>
+            <p><strong>Precio:</strong> ${{this.price}}</p>
+            <p><strong>Stock:</strong> {{this.stock}}</p>
+            <p><strong>Categoría:</strong> {{this.category}}</p>
+            {{#if this.thumbnails}}
+            <p><strong>Imágenes:</strong></p>
+            <ul>
+                {{#each this.thumbnails}}
+                <li><img src="{{this}}" alt="Imagen del producto" style="max-width: 200px;"/></li>
+                {{/each}}
+            </ul>
+            {{/if}}
+
+            
+            <!-- Botón para agregar al carrito -->
+            <form action="/carts/add" method="post">
+                <input type="hidden" name="cartId" value="your-cart-id"> 
+                <input type="hidden" name="productId" value="{{this._id}}">
+                <input type="hidden" name="quantity" value="1"> 
+                <button type="submit">Agregar al carrito</button>
+            </form>
+        </li>
         {{/each}}
     </ul>
+
+    <div>
+        {{#if hasPrevPage}}
+        <a href="{{prevLink}}">Página Anterior</a>
+        {{/if}}
+        
+        <span>Página {{page}} de {{totalPages}}</span>
+        
+        {{#if hasNextPage}}
+        <a href="{{nextLink}}">Página Siguiente</a>
+        {{/if}}
+    </div>
 </div>
 
-<script src = "/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="js/index.js"></script>
