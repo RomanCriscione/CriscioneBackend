@@ -1,6 +1,7 @@
 import express from "express"
 import { readProducts } from './products.router.js'
 import Product from "../models/product.js"
+import { isAuthenticated, isNotAuthenticated } from '../middleware/auth.js'
 
 const router = express.Router()
 
@@ -23,4 +24,9 @@ router.get("/realtimeproducts", async (req, res) => {
         res.status(500).json({ status: "error", message: error.message})
     }
 })  
+
+
+router.get('/login', async (req, res) => {
+    res.render('login')
+})
 export default router

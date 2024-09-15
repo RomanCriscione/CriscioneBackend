@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil</title>
+</head>
+<body>
+    <div>
+        <h1>Perfil de {{user.first_name}} {{user.last_name}}</h1>
+        <p><strong>Email:</strong> {{user.email}}</p>
+        <p><strong>Edad:</strong> {{user.age}}</p>
+        <p><strong>Rol:</strong> {{user.role}}</p>
+        <p><strong>Token:</strong> {{token}}</p>
+        <a href="/logout">Cerrar sesión</a>
+    </div>
+</body>
+</html>

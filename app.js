@@ -1,5 +1,8 @@
 import express from "express"
+import session from "express-session";
+import bodyParser from "body-parser"
 import handlebars, { engine } from "express-handlebars"
+import handlebarsHelpers from "handlebars-helpers"
 import path from "path";
 import productsRouter, { readProducts, writeProducts } from "./routes/products.router.js"
 import cartsRouter from './routes/carts.router.js'
@@ -9,6 +12,13 @@ import { Server } from "socket.io"
 import connectDB from './config/db.js'
 import Product from "./models/product.js"
 import mongoose from 'mongoose'
+import MongoStore from "connect-mongo"
+import sessionsRouter from "./routes/api/sessions.js";
+import passport from "passport";
+import initializePassport from "./config/passport.config.js"
+import cookieParser from 'cookie-parser'
+import profileRouter from './routes/profile.js'
+
 
 connectDB()
 
@@ -18,16 +28,36 @@ const PORT = 8080
 app.use(express.json())
 app.use(express.urlencoded({extended: true }))
 
-app.engine("handlebars", engine({
-    runtimeOptions: {
-        allowProtoPropertiesByDefault: true, 
-    },
-    helpers: {
-        eq: (a, b) => a === b
-    }
+app.use(cookieParser())
+
+app.use('/profile', profileRouter)
+
+app.engine('hbs', engine({
+    extname: '.hbs',
+    defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'views', 'layouts'),
+    helpers: handlebarsHelpers()
+}));
+app.set('view engine', 'hbs');
+app.set('views', './src/views');
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
+
+app.use(session({
+    secret: 'secretkey',
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({ mongoUrl: 'mongodb+srv://criscioner:pjF3DJtcz59ABY9t@codercluster.sdeyn.mongodb.net/fitoPlantas?retryWrites=true&w=majority' })
 }))
-app.set('views', path.join(__dirname, 'views'))
-app.set("view engine", "handlebars")
+
+initializePassport()
+app.use(passport.initialize())
+    app.use(passport.session())
+
+app.use('/api/sessions', sessionsRouter);
+app.use('/', viewsRouter);
 
 app.use(express.static(path.join(__dirname, 'public')))
 
