@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <link rel="stylesheet" href="/styles.css"> <!-- Incluye tu archivo CSS -->
+</head>
+<body>
+    <h1>Carrito de Compras</h1>
+    <div id="cart-container">
+        {{#if cart.products.length}}
+            <ul>
+                {{#each cart.products}}
+                    <li>
+                        <h2>{{this.product.title}}</h2>
+                        <p>Precio: ${{this.product.price}}</p>
+                        <p>Cantidad: {{this.quantity}}</p>
+                        <button onclick="updateQuantity('{{../cart._id}}', '{{this.product._id}}')">Actualizar Cantidad</button>
+                        <button onclick="removeProduct('{{../cart._id}}', '{{this.product._id}}')">Eliminar</button>
+                    </li>
+                {{/each}}
+            </ul>
+            <h3>Total: ${{total}}</h3>
+            <button onclick="purchaseCart('{{cart._id}}')">Comprar</button>
+        {{else}}
+            <p>El carrito está vacío.</p>
+        {{/if}}
+    </div>
+    
+    <script>
+        async function updateQuantity(cartId, productId) {
+            const quantity = prompt("Ingrese la nueva cantidad:");
+            const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity })
+            });
+            const data = await response.json();
+            alert(data.message);
+            location.reload();
+        }
+
+        async function removeProduct(cartId, productId) {
+            const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            alert(data.message);
+            location.reload();
+        }
+
+        async function purchaseCart(cartId) {
+            const response = await fetch(`/api/carts/${cartId}/purchase`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            alert(data.message);
+            location.reload();
+        }
+    </script>
+</body>
+</html>

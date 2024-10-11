@@ -1,64 +1,73 @@
-import express from 'express';
-import fs from 'fs';
-import Product from '../models/product.js';
-import Cart from '../models/cart.js';
-import mongoose from 'mongoose'
-const router = express.Router()
-const filePath = "./src/carts.json"
+const express = require('express');
+const mongoose = require('mongoose');
+const Product = require('../models/product');
+const Cart = require('../models/cart');
+const Ticket = require('../models/ticket');
+const router = express.Router();
 
-// Leer
+const validateObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-const readCarts = () => {
-    if (!fs.existsSync(filePath)) return []
-    const data = fs.readFileSync(filePath, 'utf8')
-    return JSON.parse(data)
+const isAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        return next()
+    }
+    return res.status(403).json({ message: "Acceso denegado: no tienes permisos para realizar esta acción" })
 }
 
-// Guardar
+router.get("/:cid/view", async (req, res) => {
+    try {
+        const cartId = req.params.cid;
 
-const writeCarts = (carts) => {
-    fs.writeFileSync(filePath, JSON.stringify(carts, null, 2))
-}
+        if (!validateObjectId(cartId)) {
+            return res.status(400).json({ message: "ID del carrito no válido" });
+        }
 
-const validateObjectId = (id) => mongoose.Types.ObjectId.isValid(id)
+        const cart = await Cart.findById(cartId).populate("products.product");
+        if (!cart) return res.status(404).json({ message: "Carrito no encontrado" });
 
-// POST cart
+        const total = cart.products.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
-router.post("/", async (req, res) => {
-    try{
-        const newCart = new Cart() 
-        await newCart.save()
-        res.status(201).json({message: "Carrito creado", cart: newCart})
-    
-} catch (error){
-    res.status(500).json({ status: "error", message: error.message})
-}
+ 
+        res.render('cart', { cart, total }); 
+    } catch (error) {
+        res.status(500).json({ status: "error", message: error.message });
+    }
 })
 
+
+// POST cart
+router.post("/", async (req, res) => {
+    try {
+        const newCart = new Cart()
+        await newCart.save()
+        res.status(201).json({ message: "Carrito creado", cart: newCart })
+    } catch (error) {
+        res.status(500).json({ status: "error", message: error.message })
+    }
+})
+
+// POST /add
 router.post("/add", async (req, res) => {
     try {
         const { cartId, productId, quantity } = req.body
 
-        console.log(`Received cartId: ${cartId}, productId: ${productId}, quantity: ${quantity}`)
-        
         if (!productId || quantity == null || quantity <= 0) {
             return res.status(400).json({ message: "Faltan campos obligatorios o cantidad inválida" })
         }
 
-        if (!validateObjectId(productId)) { 
+        if (!validateObjectId(productId)) {
             return res.status(400).json({ message: "ID del producto no válido" })
         }
 
         let cart
-        
+
         if (cartId && validateObjectId(cartId)) {
             cart = await Cart.findById(cartId)
         }
 
-        if (!cart) { 
+        if (!cart) {
             cart = new Cart()
             await cart.save()
-            console.log(`Nuevo carrito creado con ID: ${cart._id}`)
         }
 
         const product = await Product.findById(productId)
@@ -66,51 +75,47 @@ router.post("/add", async (req, res) => {
 
         const itemIndex = cart.products.findIndex(item => item.product.toString() === productId)
         if (itemIndex !== -1) {
-            cart.products[itemIndex].quantity += quantity;
+            cart.products[itemIndex].quantity += quantity
         } else {
             cart.products.push({ product: productId, quantity })
         }
 
-        await cart.save();
+        await cart.save()
         res.status(200).json({ message: "Producto agregado al carrito", cart })
     } catch (error) {
-        console.error('Error adding product to cart:', error)
         res.status(500).json({ status: 'error', message: error.message })
     }
 })
 
-// Get
-
+// GET /:cid
 router.get("/:cid", async (req, res) => {
     try {
-        const cartId = req.params.cid;
+        const cartId = req.params.cid
 
-            if (!validateObjectId(cartId)) {
+        if (!validateObjectId(cartId)) {
             return res.status(400).json({ message: "ID del carrito no válido" })
         }
 
         const cart = await Cart.findById(cartId).populate("products.product")
         if (!cart) return res.status(404).json({ message: "Carrito no encontrado" })
 
-        res.json(cart);
+        res.json(cart)
     } catch (error) {
-        res.status(500).json({ status: "error", message: error.message });
+        res.status(500).json({ status: "error", message: error.message })
     }
 })
 
-// PUT
-
+// PUT /:cid
 router.put('/:cid', async (req, res) => {
     try {
         const { products } = req.body
-        const cartId = req.params.cid
+        const cartId = req.params.cid;
 
-        
         if (!validateObjectId(cartId)) {
             return res.status(400).json({ message: "ID del carrito no válido" })
         }
 
-        const cart = await Cart.findById(cartId);
+        const cart = await Cart.findById(cartId)
         if (!cart) return res.status(404).json({ message: "Carrito no encontrado" })
 
         cart.products = products.map(p => ({
@@ -123,14 +128,14 @@ router.put('/:cid', async (req, res) => {
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message })
     }
-})
+});
 
+// PUT /:cid/products/:pid
 router.put("/:cid/products/:pid", async (req, res) => {
     try {
         const { cid, pid } = req.params
         const { quantity } = req.body
 
-       
         if (!validateObjectId(cid) || !validateObjectId(pid)) {
             return res.status(400).json({ message: "ID del carrito o del producto no válido" })
         }
@@ -138,7 +143,7 @@ router.put("/:cid/products/:pid", async (req, res) => {
             return res.status(400).json({ message: "Cantidad inválida" })
         }
 
-        const cart = await Cart.findById(cid);
+        const cart = await Cart.findById(cid)
         if (!cart) return res.status(404).json({ message: "Carrito no encontrado" })
 
         const cartProduct = cart.products.find(p => p.product.equals(pid))
@@ -151,15 +156,13 @@ router.put("/:cid/products/:pid", async (req, res) => {
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message })
     }
-})
+});
 
-// Delete
-
+// DELETE /:cid/products/:pid
 router.delete('/:cid/products/:pid', async (req, res) => {
     try {
-        const { cid, pid } = req.params;
+        const { cid, pid } = req.params
 
-        
         if (!validateObjectId(cid) || !validateObjectId(pid)) {
             return res.status(400).json({ message: "ID del carrito o del producto no válido" })
         }
@@ -176,12 +179,11 @@ router.delete('/:cid/products/:pid', async (req, res) => {
     }
 })
 
-
+// DELETE /:cid
 router.delete('/:cid', async (req, res) => {
     try {
         const cartId = req.params.cid
 
-       
         if (!validateObjectId(cartId)) {
             return res.status(400).json({ message: "ID del carrito no válido" })
         }
@@ -198,4 +200,61 @@ router.delete('/:cid', async (req, res) => {
     }
 })
 
-export default router;
+// POST /:cid/purchase
+router.post("/:cid/purchase", async (req, res) => {
+    try {
+        const cartId = req.params.cid
+
+        if (!validateObjectId(cartId)) {
+            return res.status(400).json({ message: "ID del carrito no válido" })
+        }
+
+        const cart = await Cart.findById(cartId).populate("products.product")
+        if (!cart) return res.status(404).json({ message: "Carrito no encontrado" })
+
+        const ticketItems = []
+        let totalAmount = 0
+
+        for (const item of cart.products) {
+            const product = item.product
+            const quantity = item.quantity
+
+            if (product.stock < quantity) {
+                ticketItems.push({
+                    product: product._id,
+                    quantity: quantity,
+                    status: 'no comprado'
+                });
+            } else {
+                product.stock -= quantity
+                await product.save()
+                ticketItems.push({
+                    product: product._id,
+                    quantity: quantity,
+                    status: 'comprado'
+                });
+                totalAmount += product.price * quantity
+            }
+        }
+
+     
+        const newTicket = new Ticket({
+            code: `TICKET-${Date.now()}`,
+            purchase_datetime: new Date(),
+            amount: totalAmount,
+            purchaser: req.user._id 
+        })
+
+        await newTicket.save()
+
+        
+        cart.products = []
+        await cart.save()
+
+        res.json({ message: "Compra procesada", ticket: newTicket, items: ticketItems })
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message })
+    }
+});
+
+module.exports = router;

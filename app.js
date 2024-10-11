@@ -1,23 +1,26 @@
-import express from "express"
-import session from "express-session";
-import bodyParser from "body-parser"
-import handlebars, { engine } from "express-handlebars"
-import handlebarsHelpers from "handlebars-helpers"
-import path from "path";
-import productsRouter, { readProducts, writeProducts } from "./routes/products.router.js"
-import cartsRouter from './routes/carts.router.js'
-import __dirname from './utils.js'
-import viewsRouter from "./routes/views.router.js"
-import { Server } from "socket.io"
-import connectDB from './config/db.js'
-import Product from "./models/product.js"
-import mongoose from 'mongoose'
-import MongoStore from "connect-mongo"
-import sessionsRouter from "./routes/api/sessions.js";
-import passport from "passport";
-import initializePassport from "./config/passport.config.js"
-import cookieParser from 'cookie-parser'
-import profileRouter from './routes/profile.js'
+require('dotenv').config()
+console.log('MongoDB URI:', process.env.MONGODB_URI)
+
+const express = require("express");
+const session = require("express-session");
+const bodyParser = require("body-parser");
+const { engine } = require("express-handlebars");
+const handlebarsHelpers = require("handlebars-helpers");
+const path = require("path");
+const productsRouter = require("./routes/products.router");
+const cartsRouter = require('./routes/carts.router');
+const { createHash, isValidPassword } = require('./utils');
+const viewsRouter = require("./routes/views.router");
+const { Server } = require("socket.io");
+const { connectDB } = require('./config/db');
+const Product = require("./models/product");
+const MongoStore = require("connect-mongo");
+const sessionsRouter = require("./routes/api/sessions");
+const passport = require("passport");
+const initializePassport = require("./config/passport.config");
+const cookieParser = require('cookie-parser');
+const profileRouter = require('./routes/profile');
+const errorHandler = require('./middleware/error');
 
 
 connectDB()
@@ -46,26 +49,27 @@ app.use(bodyParser.json())
 
 
 app.use(session({
-    secret: 'secretkey',
+    secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: true,
-    store: MongoStore.create({ mongoUrl: 'mongodb+srv://criscioner:pjF3DJtcz59ABY9t@codercluster.sdeyn.mongodb.net/fitoPlantas?retryWrites=true&w=majority' })
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true }
+    })
 }))
 
 initializePassport()
 app.use(passport.initialize())
     app.use(passport.session())
 
-app.use('/api/sessions', sessionsRouter);
-app.use('/', viewsRouter);
-
+app.use('/api/sessions', sessionsRouter)
+app.use('/', viewsRouter)
+app.use('/profile', profileRouter)
 app.use(express.static(path.join(__dirname, 'public')))
-
 app.use("/", viewsRouter)
-
 app.use("/products", productsRouter)
 app.use("/carts", cartsRouter)
-
+app.use(errorHandler)
 
 const httpServer = app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`))
 
@@ -110,4 +114,4 @@ io.on("connection", socket=>{
     })
 })
 
-export default io
+module.exports = io

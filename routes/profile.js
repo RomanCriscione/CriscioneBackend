@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import jwt from 'jsonwebtoken';
+const { Router } = require('express');
+const jwt = require('jsonwebtoken');
 
 const router = Router();
 
@@ -22,4 +22,4 @@ router.get('/', verifyToken, (req, res) => {
      });
 });
 
-export default router;
+module.exports = router

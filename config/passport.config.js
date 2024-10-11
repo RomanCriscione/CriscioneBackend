@@ -1,10 +1,10 @@
-import passport from "passport"
-import local from 'passport-local'
-import userService from '../models/user.js'
-import { createHash, isValidPassword } from '../utils.js'
-import GitHubStrategy from 'passport-github2'
-import jwt from 'passport-jwt'
-import cookieParser from 'cookie-parser'
+const passport = require('passport');
+const local = require('passport-local');
+const userService = require('../models/user.js');
+const { createHash, isValidPassword } = require('../utils.js');
+const GitHubStrategy = require('passport-github2');
+const jwt = require('passport-jwt');
+const cookieParser = require('cookie-parser')
 
 
 const LocalStrategy = local.Strategy
@@ -107,4 +107,4 @@ const initializePassport = () => {
     })
 }
 
-export default initializePassport
+module.exports = initializePassport
